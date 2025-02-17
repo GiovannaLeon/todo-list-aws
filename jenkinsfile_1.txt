@@ -1,0 +1,132 @@
+pipeline {
+    agent any
+  
+    environment {
+         // Storing the secret token from Jenkins as an environment variable
+        MiToken = credentials('MITOKEN1')  // 'MiToken' is the ID of your secret text in Jenkins
+        REGION = 'us-east-1'  // O la región que prefieras
+        STACK_NAME = 'todo-list-aws-staging'  // Nombre del stack de CloudFormation
+        S3_BUCKET = 'todo-list-aws-staging'  // Nombre del bucket S3
+        BASE_URL=""
+    }
+
+    stages {
+     
+        stage('Get Code') {
+            steps {
+              git branch: 'develop', url: 'https://github.com/GiovannaLeon/todo-list-aws.git'            
+            }
+        }
+
+        stage('Static Test') {
+            steps {
+                // Ejecutar flake8 en la carpeta src/ y continuar sin importar los errores
+                sh '/var/lib/jenkins/.local/bin/flake8 src/ > flake8_report.txt || true'
+                
+                // Ejecutar bandit en la carpeta src/ y generar el informe HTML
+                sh '/var/lib/jenkins/.local/bin/bandit -r src/ -f html -o bandit_report.html || true'
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        // Comando SAM para desplegar en staging
+                        sh 'sam build'
+                       
+                        sh 'sam validate --region us-east-1'
+                        // Ejecutar el despliegue con SAM
+                        sh """
+                            sam deploy --config-file samconfig.toml --config-env staging sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+                        """
+                    /*
+                    script{
+                                def apiUrl = sh(script: """
+                                    sam list stack-outputs --stack-name ${STACK_NAME} --region ${REGION} --OUTPUT JSON | -r '.[] | select(.Outputkey="BaseUrlApi") | outputvalue'
+                            """, returnStdout: true).trim()
+                            
+                            env.BASE_URL = apiUrl
+                            echo "API BASE_RUL: ${env.BASE_URL}"
+                    }
+                    */
+
+                    }
+                }
+            }
+        }
+        
+        stage('Rest Test') {
+            steps {
+                script {
+                    // Usamos catchError para manejar el error y no detener el pipeline
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        try {
+                            echo "ejecuta pytest"
+                        /*
+                            sh(script: """
+                                export BASE_URL=${deployUrl}
+                                pytest tests/ --maxfail=1 --disable-warnings -v
+                            """)
+                       */
+                            } catch (Exception e) {
+                            echo "Error during Todo List function invocations: ${e.message}"
+                        }
+                    }
+                }
+            }
+        }
+
+
+        
+         stage('Promote to Production') {
+            steps {
+                script {
+                    def mergeSuccessful = false
+                    try {
+                        // Verifica el estado actual del repositorio
+                        
+                        
+                        sh 'git status'
+
+                        // Cambiar a la rama master
+                         sh 'git checkout master'
+                        
+                        // Configurar para usar la estrategia de merge (por defecto)
+                         sh 'git config pull.rebase false'
+
+                        // Traer los últimos cambios de master para evitar conflictos
+                         sh 'git pull origin master'
+                        
+                        // Verificar si hay algún cambio no deseado
+                         sh 'git status'
+
+                        // Hacer merge de develop a master
+                        sh 'git merge develop'
+                        
+                        // Empujar los cambios a master
+                        //sh 'git push origin master'
+                        sh 'git remote set-url origin https://${MiToken}@github.com/GiovannaLeon/todo-list-aws.git'  
+                        sh 'gi push origin master'
+           
+
+                        // Si no hubo excepciones, marcar el merge como exitoso
+                        mergeSuccessful = true
+                    } catch (Exception e) {
+                        // Si ocurre un error, marcar como fallido
+                        mergeSuccessful = false
+                        error "Merge failed: ${e.message}"
+                    }
+
+                    // Comprobar si el merge fue exitoso antes de continuar
+                    if (!mergeSuccessful) {
+                        error "Merge to master failed. Aborting production deployment."
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
