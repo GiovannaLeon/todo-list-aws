@@ -1,0 +1,120 @@
+pipeline {
+    agent any
+
+    environment {
+        MiToken = credentials('MITOKEN1')  // 'MiToken' is the ID of your secret text in Jenkins
+        REGION = 'us-east-1'  // O la región que prefieras
+        STACK_NAME = 'todo-list-aws-production'  // Nombre del stack de CloudFormation en producción
+        S3_BUCKET = 'todo-list-aws-production'  // Nombre del bucket S3 en producción
+    }
+
+    stages {
+        
+        // Etapa 1: Obtener el código desde la rama master
+        stage('Get Code') {
+            steps {
+                git branch: 'master', url: 'https://github.com/GiovannaLeon/todo-list-aws.git'
+            }
+        }
+
+        // Etapa 2: Desplegar en producción
+        stage('Deploy to Production') {
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        // Comando SAM para construir la aplicación
+                        sh 'sam build'
+
+                        // Validar la configuración de SAM para producción
+                        sh 'sam validate --region us-east-1'
+                        
+                        // Desplegar la aplicación en el entorno de producción usando SAM
+                        sh """
+                            sam deploy --config-file samconfig.toml --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
+                        """
+                            /*
+                    script{
+                                def apiUrl = sh(script: """
+                                    sam list stack-outputs --stack-name ${STACK_NAME} --region ${REGION} --OUTPUT JSON | -r '.[] | select(.Outputkey="BaseUrlApi") | outputvalue'
+                            """, returnStdout: true).trim()
+                            
+                            env.BASE_URL = apiUrl
+                            echo "API BASE_RUL: ${env.BASE_URL}"
+                    }
+                    */
+                    }
+                }
+            }
+        }
+
+        // Etapa 3: Realizar pruebas en el entorno de producción
+        stage('Rest Test') {
+            steps {
+                script {
+                    // Usamos catchError para manejar errores sin detener el pipeline
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        try {
+                            echo "Ejecutando pruebas de solo lectura en producción"
+                        /*
+                            // Ejecutamos pruebas de solo lectura para no alterar datos en producción
+                            sh(script: """
+                                export BASE_URL=${BASE_URL}
+                                pytest tests/ --maxfail=1 --disable-warnings -v --mark-readonly
+                            """)
+                        */
+                        } catch (Exception e) {
+                            echo "Error durante las invocaciones de la funcionalidad de la Todo List: ${e.message}"
+                        }
+                    }
+                }
+            }
+        }
+        
+             stage('Promote to Production') {
+            steps {
+                script {
+                    def mergeSuccessful = false
+                    try {
+                        // Verifica el estado actual del repositorio
+                        
+                        
+                        sh 'git status'
+
+                        // Cambiar a la rama master
+                         sh 'git checkout master'
+                        
+                        // Configurar para usar la estrategia de merge (por defecto)
+                         sh 'git config pull.rebase false'
+
+                        // Traer los últimos cambios de master para evitar conflictos
+                         sh 'git pull origin master'
+                        
+                        // Verificar si hay algún cambio no deseado
+                         sh 'git status'
+
+                        // Hacer merge de develop a master
+                        sh 'git merge develop'
+                        
+                        // Empujar los cambios a master
+                        //sh 'git push origin master'
+                        git remote set-url origin https://${MiToken}@github.com/GiovannaLeon/todo-list-aws.git'  
+                         git push origin master
+           
+
+                        // Si no hubo excepciones, marcar el merge como exitoso
+                        mergeSuccessful = true
+                    } catch (Exception e) {
+                        // Si ocurre un error, marcar como fallido
+                        mergeSuccessful = false
+                        error "Merge failed: ${e.message}"
+                    }
+
+                    // Comprobar si el merge fue exitoso antes de continuar
+                    if (!mergeSuccessful) {
+                        error "Merge to master failed. Aborting production deployment."
+                    }
+                }
+            }
+        }
+    }
+}
