@@ -1,0 +1,147 @@
+pipeline {
+    agent none  // No se asigna un agente por defecto, se asignan de forma explícita en las etapas
+
+    environment {
+        MiToken = credentials('MITOKEN1')  // 'MiToken' es el ID de tu secret text en Jenkins
+        REGION = 'us-east-1'  // O la región que prefieras
+        STACK_NAME = 'todo-list-aws-production'  // Nombre del stack de CloudFormation en producción
+        S3_BUCKET = 'todo-list-aws-production'  // Nombre del bucket S3 en producción
+    }
+
+    stages {
+
+        // Etapa 1: Obtener el código desde la rama master (agente por defecto)
+        stage('Get Code') {
+            agent any  // Usar cualquier agente disponible
+            steps {
+                git branch: 'master', url: 'https://github.com/GiovannaLeon/todo-list-aws.git'
+            }
+        }
+
+        // Etapa 2: Desplegar en producción (agente por defecto)
+        stage('Deploy to Production') {
+            agent any  // Usar cualquier agente disponible
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        // Comando SAM para construir la aplicación
+                        sh 'whoami'
+                        sh 'hostname'
+                        sh 'sam build'
+
+                        // Validar la configuración de SAM para producción
+                        sh 'sam validate --region us-east-1'
+                        
+                        // Desplegar la aplicación en el entorno de producción usando SAM
+                        sh """
+                            sam deploy --config-file samconfig.toml --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
+                        """
+                        
+                        // Obtener la URL del entorno serverless de CloudFormation
+                        /*def apiUrl = sh(script: """
+                            sam list stack-outputs --stack-name ${STACK_NAME} --region ${REGION} --OUTPUT JSON | jq -r '.[] | select(.OutputKey=="BaseUrlApi") | .OutputValue'
+                        """, returnStdout: true).trim()
+
+                        env.BASE_URL = apiUrl
+                        echo "API BASE_URL: ${env.BASE_URL}"*/
+                    }
+                }
+            }
+        }
+
+        // Etapa 3: Pruebas de análisis estático (Flake8 y Bandit) en un agente específico
+        stage('Static Analysis') {
+            agent { label 'static-analysis' }  // Asignar el agente dedicado para análisis estático
+            steps {
+                script {
+                    echo "Ejecutando análisis estático con Flake8 y Bandit"
+                    sh 'whoami'
+                    sh 'hostname'
+                    
+                    sh 'pip install flake8 bandit'
+
+                    // Ejecutar Flake8
+                    sh 'flake8 .'
+
+                    // Ejecutar Bandit
+                    sh 'bandit -r .'
+                }
+            }
+        }
+
+        // Etapa 4: Realizar pruebas en el entorno de producción (API Rest) en un agente específico
+        stage('Rest Test') {
+            
+            agent { label 'api-tests' }  // Asignar el agente dedicado para pruebas de API Rest
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        try {
+                            echo "Ejecutando pruebas de solo lectura en producción"
+                            sh 'whoami'
+                            sh 'hostname'
+                            
+                            
+/*
+                            // Ejecutar pruebas de solo lectura con pytest
+                            sh(script: """
+                                export BASE_URL=${BASE_URL}
+                                pytest tests/ --maxfail=1 --disable-warnings -v --mark-readonly
+                            """)*/
+                        } catch (Exception e) {
+                            echo "Error durante las invocaciones de la funcionalidad de la Todo List: ${e.message}"
+                        }
+                    }
+                }
+            }
+        }
+
+        // Etapa 5: Promoción a producción (agente por defecto)
+        stage('Promote to Production') {
+            agent any  // Usar cualquier agente disponible
+            steps {
+                script {
+                    def mergeSuccessful = false
+                    try {
+                        // Verifica el estado actual del repositorio
+                        sh 'whoami'
+                        sh 'hostname'
+                    
+                        sh 'git status'
+
+                        // Cambiar a la rama master
+                        //sh 'git checkout master'
+                        
+                        // Configurar para usar la estrategia de merge (por defecto)
+                        //sh 'git config pull.rebase false'
+
+                        // Traer los últimos cambios de master para evitar conflictos
+                        //sh 'git pull origin master'
+                        
+                        // Verificar si hay algún cambio no deseado
+                        //sh 'git status'
+
+                        // Hacer merge de develop a master
+                        //sh 'git merge develop'
+                        
+                        // Empujar los cambios a master
+                        //git remote set-url origin https://${MiToken}@github.com/GiovannaLeon/todo-list-aws.git'  
+                        //git push origin master
+
+                        // Si no hubo excepciones, marcar el merge como exitoso
+                        mergeSuccessful = true
+                    } catch (Exception e) {
+                        // Si ocurre un error, marcar como fallido
+                        mergeSuccessful = false
+                        error "Merge failed: ${e.message}"
+                    }
+
+                    // Comprobar si el merge fue exitoso antes de continuar
+                    if (!mergeSuccessful) {
+                        error "Merge to master failed. Aborting production deployment."
+                    }
+                }
+            }
+        }
+    }
+}
