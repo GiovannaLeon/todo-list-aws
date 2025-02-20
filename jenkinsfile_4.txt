@@ -1,0 +1,69 @@
+pipeline {
+    agent none
+
+    environment {
+        MiToken = credentials('MITOKEN1')
+        REGION = 'us-east-1'
+        STACK_NAME = 'todo-list-aws-production'
+        S3_BUCKET = 'todo-list-aws-production'
+    }
+
+    stages {
+        stage('Get Code') {
+            agent any  // Usar cualquier agente disponible
+            steps {
+                git branch: 'master', url: 'https://github.com/GiovannaLeon/todo-list-aws.git'
+                
+                script {
+                    // Obtener la rama actual usando git
+                    def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+                    echo "Entorno actual: ${branch}"
+
+                    // Clonando el repositorio de configuración dependiendo de la rama
+                    if (branch == 'staging') {
+                        echo "Clonando desde la rama 'staging' de 'todo-list-aws-config'..."
+                        sh 'git clone --single-branch --branch staging https://github.com/GiovannaLeon/todo-list-aws-config.git'
+                    } else if (branch == 'production' || branch == 'master') {
+                        echo "Clonando desde la rama 'production' de 'todo-list-aws-config'..."
+                        sh 'git clone --single-branch --branch production https://github.com/GiovannaLeon/todo-list-aws-config.git'
+                    } else {
+                        error "No se encuentra un entorno válido (staging o production)."
+                    }
+
+                    // Verificar que el archivo samconfig.toml se haya descargado
+                    if (fileExists('todo-list-aws-config/samconfig.toml')) {
+                        echo "Archivo samconfig.toml descargado correctamente desde la rama ${branch}."
+                    } else {
+                        error "El archivo samconfig.toml no se encontró en el repositorio 'todo-list-aws-config'."
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            agent any  // Usar cualquier agente disponible
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        // Comando SAM para construir la aplicación
+                        sh 'whoami'
+                        sh 'hostname'
+
+                        // Construir la aplicación
+                        sh 'sam build'
+
+                        // Validar la configuración de SAM para producción
+                        sh 'sam validate --region us-east-1'
+
+                        // Desplegar la aplicación en el entorno de producción usando SAM
+                        sh """
+                            sam deploy --config-file todo-list-aws-config/samconfig.toml --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
+                        """
+                    }
+                }
+            }
+        }
+
+        // Otros stages (Static Analysis, Rest Test, Promote to Production) siguen siendo los mismos
+    }
+}
