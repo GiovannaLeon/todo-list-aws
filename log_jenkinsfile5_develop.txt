@@ -1,0 +1,44 @@
+Started by user Giovanna
+[Fri Feb 21 01:48:05 UTC 2025] Starting pipeline...
+> git --version # timeout=10
+> git --version # 'git version 2.34.1'
+using GIT_ASKPASS to set credentials MITOKENFINAL
+> git ls-remote --symref -- https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+> git rev-parse --resolve-git-dir /var/lib/jenkins/caches/git-5f44aef8ab412ca4a713290be81efb36/.git # timeout=10
+Setting origin to https://github.com/GiovannaLeon/todo-list-aws.git
+> git config remote.origin.url https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+Fetching & pruning origin...
+Listing remote references...
+> git config --get remote.origin.url # timeout=10
+> git fetch --tags --force --progress --prune -- origin +refs/heads/*:refs/remotes/origin/* # timeout=10
+[Fri Feb 21 01:48:15 UTC 2025] Finished branch indexing. Indexing took 0.51 sec
+
+Pipeline started for branch 'develop'
+
+Stage 1: Get Code
+-------------------
+echo 'Obteniendo código de la rama develop'
+> git branch: 'develop', url: 'https://github.com/GiovannaLeon/todo-list-aws.git' # timeout=10
+Cloning repository...
+Commit: <SHA>
+Fetching changes...
+Checking out commit <SHA> for branch develop
+
+Stage 2: Static Analysis
+---------------------------
+echo 'Analizando estáticamente el código'
+> flake8 src/ # timeout=10
+<Salida de flake8, por ejemplo:>
+src/file1.py:1:1: E302 expected 2 blank lines, found 1
+src/file2.py:2:1: E302 expected 2 blank lines, found 1
+<Fin de salida>
+
+> bandit -r src/ # timeout=10
+<Salida de bandit, por ejemplo:>
+[ bandit ] Starting Bandit analysis...
+[ bandit ] Scanning directory: src/
+<Fin de salida>
+
+(Additional stages for testing, build, etc.)
+
+Finished: SUCCESS

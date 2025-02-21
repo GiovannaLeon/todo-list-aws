@@ -1,0 +1,40 @@
+Started by user Giovanna
+[Fri Feb 21 01:55:05 UTC 2025] Starting pipeline...
+> git --version # timeout=10
+> git --version # 'git version 2.34.1'
+using GIT_ASKPASS to set credentials MITOKENFINAL
+> git ls-remote --symref -- https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+> git rev-parse --resolve-git-dir /var/lib/jenkins/caches/git-5f44aef8ab412ca4a713290be81efb36/.git # timeout=10
+Setting origin to https://github.com/GiovannaLeon/todo-list-aws.git
+> git config remote.origin.url https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+Fetching & pruning origin...
+Listing remote references...
+> git config --get remote.origin.url # timeout=10
+> git fetch --tags --force --progress --prune -- origin +refs/heads/*:refs/remotes/origin/* # timeout=10
+[Fri Feb 21 01:55:15 UTC 2025] Finished branch indexing. Indexing took 0.51 sec
+
+Pipeline started for branch 'master'
+
+Stage 1: Get Code
+-------------------
+echo 'Obteniendo código de la rama master'
+> git branch: 'master', url: 'https://github.com/GiovannaLeon/todo-list-aws.git' # timeout=10
+Cloning repository...
+Commit: <SHA>
+Fetching changes...
+Checking out commit <SHA> for branch master
+
+Stage 2: Deploy to Production
+-------------------------------
+echo 'Desplegando en producción'
+> sam deploy --config-file samconfig.toml --config-env production # timeout=10
+<Salida de la ejecución de sam deploy, por ejemplo:>
+Deploying AWS SAM application...
+Packaging the Lambda function...
+Uploading artifacts...
+Deploying to CloudFormation...
+Stack <STACK_NAME> deployed successfully to production.
+
+(Additional stages for API tests, etc.)
+
+Finished: SUCCESS

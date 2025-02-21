@@ -1,0 +1,233 @@
+Started by user Giovanna
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/unir/cp42@2
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Get Code)
+[Pipeline] git
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/GiovannaLeon/todo-list-aws.git
+ > git init /var/lib/jenkins/workspace/unir/cp42@2 # timeout=10
+Fetching upstream changes from https://github.com/GiovannaLeon/todo-list-aws.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.34.1'
+ > git fetch --tags --force --progress -- https://github.com/GiovannaLeon/todo-list-aws.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+Checking out Revision 3b7d7bdd91a360c529f74fbbbd4aada326149dcc (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3b7d7bdd91a360c529f74fbbbd4aada326149dcc # timeout=10
+ > git branch -a -v --no-abbrev # timeout=10
+ > git checkout -b master 3b7d7bdd91a360c529f74fbbbd4aada326149dcc # timeout=10
+Commit message: "Merge branch 'master' of https://github.com/GiovannaLeon/todo-list-aws"
+ > git rev-list --no-walk eb19f090a738041a230cf65784747c419f43b8db # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static Test)
+[Pipeline] sh
++ /var/lib/jenkins/.local/bin/flake8 src/
+[Pipeline] sh
++ /var/lib/jenkins/.local/bin/bandit -r src/ -f html -o bandit_report.html
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.10.12
+[html]	INFO	HTML output written to file: bandit_report.html
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] catchError
+[Pipeline] {
+[Pipeline] sh
++ sam build
+Building codeuri: /var/lib/jenkins/workspace/unir/cp42@2/src runtime: python3.10 metadata: {} architecture: x86_64 functions: CreateTodoFunction, ListTodosFunction, GetTodoFunction, UpdateTodoFunction, DeleteTodoFunction
+ Running PythonPipBuilder:ResolveDependencies
+ Running PythonPipBuilder:CopySource
+
+Build Succeeded
+
+Built Artifacts  : .aws-sam/build
+Built Template   : .aws-sam/build/template.yaml
+
+Commands you can use next
+=========================
+[*] Validate SAM template: sam validate
+[*] Invoke Function: sam local invoke
+[*] Test Function in the Cloud: sam sync --stack-name {{stack-name}} --watch
+[*] Deploy: sam deploy --guided
+[Pipeline] sh
++ sam validate --region us-east-1
+/var/lib/jenkins/workspace/unir/cp42@2/template.yaml is a valid SAM Template. This is according to basic SAM Validation, for additional validation, please run with "--lint" option
+[Pipeline] sh
++ sam deploy --config-file samconfig.toml --config-env production sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+
+	Deploying with following values
+	===============================
+	Stack name                   : todo-list-aws-production
+	Region                       : us-east-1
+	Confirm changeset            : False
+	Disable rollback             : False
+	Deployment s3 bucket         : todo-list-aws-production
+	Capabilities                 : ["CAPABILITY_IAM"]
+	Parameter overrides          : {"Stage": "production"}
+	Signing Profiles             : {}
+
+Initiating deployment
+=====================
+
+File with same data already exists at todo-list-aws/306a3c20dae03b45010c36b46e13d763.template, skipping upload
+
+
+Waiting for changeset to be created..
+
+CloudFormation stack changeset
+-------------------------------------------------------------------------------------------------
+Operation                LogicalResourceId        ResourceType             Replacement            
+-------------------------------------------------------------------------------------------------
+* Modify                 CreateTodoFunction       AWS::Lambda::Function    False                  
+* Modify                 DeleteTodoFunction       AWS::Lambda::Function    False                  
+* Modify                 GetTodoFunction          AWS::Lambda::Function    False                  
+* Modify                 ListTodosFunction        AWS::Lambda::Function    False                  
+* Modify                 ServerlessRestApi        AWS::ApiGateway::RestA   False                  
+                                                  pi                                              
+* Modify                 UpdateTodoFunction       AWS::Lambda::Function    False                  
+-------------------------------------------------------------------------------------------------
+
+
+Changeset created successfully. arn:aws:cloudformation:us-east-1:582789485636:changeSet/samcli-deploy1740095589/3e31d160-f746-458a-a982-2e4fcc72775f
+
+
+2025-02-20 23:53:20 - Waiting for stack create/update to complete
+
+CloudFormation events from stack operations (refresh every 5.0 seconds)
+-------------------------------------------------------------------------------------------------
+ResourceStatus           ResourceType             LogicalResourceId        ResourceStatusReason   
+-------------------------------------------------------------------------------------------------
+UPDATE_IN_PROGRESS       AWS::CloudFormation::S   todo-list-aws-           User Initiated         
+                         tack                     production                                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    CreateTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    UpdateTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    DeleteTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    ListTodosFunction        -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    GetTodoFunction          -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    DeleteTodoFunction       -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    UpdateTodoFunction       -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    CreateTodoFunction       -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    ListTodosFunction        -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    GetTodoFunction          -                      
+UPDATE_COMPLETE_CLEANU   AWS::CloudFormation::S   todo-list-aws-           -                      
+P_IN_PROGRESS            tack                     production                                      
+UPDATE_COMPLETE          AWS::CloudFormation::S   todo-list-aws-           -                      
+                         tack                     production                                      
+-------------------------------------------------------------------------------------------------
+
+CloudFormation outputs from deployed stack
+-------------------------------------------------------------------------------------------------
+Outputs                                                                                         
+-------------------------------------------------------------------------------------------------
+Key                 BaseUrlApi                                                                  
+Description         Base URL of API                                                             
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod                 
+
+Key                 DeleteTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Delete TODO             
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 ListTodosApi                                                                
+Description         API Gateway endpoint URL for ${opt:stage} stage for List TODO               
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod/todos           
+
+Key                 UpdateTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Update TODO             
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 GetTodoApi                                                                  
+Description         API Gateway endpoint URL for ${opt:stage} stage for Get TODO                
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 CreateTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Create TODO             
+Value               https://z0rie38f69.execute-api.us-east-1.amazonaws.com/Prod/todos/          
+-------------------------------------------------------------------------------------------------
+
+
+Successfully created/updated stack - todo-list-aws-production in us-east-1
+
+[Pipeline] }
+[Pipeline] // catchError
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Rest Test)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] catchError
+[Pipeline] {
+[Pipeline] echo
+Ejecutando pruebas de solo lectura para no alterar los datos en producción
+[Pipeline] }
+[Pipeline] // catchError
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Production)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	bandit_report.html
+	flake8_report.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+[Pipeline] sh
++ git checkout master
+Already on 'master'
+[Pipeline] sh
++ git pull origin master
+From https://github.com/GiovannaLeon/todo-list-aws
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+[Pipeline] withCredentials
+Masking supported pattern matches of $GIT_PASS
+[Pipeline] {
+[Pipeline] sh
++ git remote set-url origin https://GiovannaLeon:****@github.com/GiovannaLeon/todo-list-aws.git
++ git push origin master
+Everything up-to-date
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

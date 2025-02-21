@@ -2,10 +2,10 @@ pipeline {
     agent none  // No se asigna un agente por defecto, se asignan de forma explícita en las etapas
 
     environment {
-        MiToken = credentials('MITOKEN1')  // 'MiToken' es el ID de tu secret text en Jenkins
         REGION = 'us-east-1'  // O la región que prefieras
         STACK_NAME = 'todo-list-aws-production'  // Nombre del stack de CloudFormation en producción
         S3_BUCKET = 'todo-list-aws-production'  // Nombre del bucket S3 en producción
+         BASE_URL=""
     }
 
     stages {
@@ -97,51 +97,42 @@ pipeline {
         }
 
         // Etapa 5: Promoción a producción (agente por defecto)
-        stage('Promote to Production') {
-            agent any  // Usar cualquier agente disponible
-            steps {
-                script {
-                    def mergeSuccessful = false
-                    try {
-                        // Verifica el estado actual del repositorio
-                        sh 'whoami'
-                        sh 'hostname'
-                    
-                        sh 'git status'
+         stage('Promote to Production') {
+    agent any  // Asignamos un agente disponible para esta etapa
+    steps {
+        script {
+            def mergeSuccessful = false
+            try {
+                // Obtener el estado de Git
+                sh 'git status'
 
-                        // Cambiar a la rama master
-                        //sh 'git checkout master'
-                        
-                        // Configurar para usar la estrategia de merge (por defecto)
-                        //sh 'git config pull.rebase false'
-
-                        // Traer los últimos cambios de master para evitar conflictos
-                        //sh 'git pull origin master'
-                        
-                        // Verificar si hay algún cambio no deseado
-                        //sh 'git status'
-
-                        // Hacer merge de develop a master
-                        //sh 'git merge develop'
-                        
-                        // Empujar los cambios a master
-                        //git remote set-url origin https://${MiToken}@github.com/GiovannaLeon/todo-list-aws.git'  
-                        //git push origin master
-
-                        // Si no hubo excepciones, marcar el merge como exitoso
-                        mergeSuccessful = true
-                    } catch (Exception e) {
-                        // Si ocurre un error, marcar como fallido
-                        mergeSuccessful = false
-                        error "Merge failed: ${e.message}"
-                    }
-
-                    // Comprobar si el merge fue exitoso antes de continuar
-                    if (!mergeSuccessful) {
-                        error "Merge to master failed. Aborting production deployment."
-                    }
+                // Cambiar a la rama master
+                sh 'git checkout master'
+                
+                // Traer los últimos cambios de master para evitar conflictos
+                sh 'git pull origin master'
+                
+                // Hacer push a la rama master después del rebase y commit
+                withCredentials([usernamePassword(credentialsId: 'MITOKENFINAL', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh '''
+                        git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/GiovannaLeon/todo-list-aws.git
+                        git push origin master
+                    '''
                 }
+
+                mergeSuccessful = true
+            } catch (Exception e) {
+                mergeSuccessful = false
+                error "Merge failed or push failed: ${e.message}"
+            }
+
+            if (!mergeSuccessful) {
+                error "Merge or push to master failed. Aborting production deployment."
             }
         }
+    }
+}
+
+        
     }
 }

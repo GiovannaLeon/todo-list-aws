@@ -1,0 +1,236 @@
+Started by user Giovanna
+[Pipeline] Start of Pipeline
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Get Code)
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/unir/Jenkinsfile_agentes
+[Pipeline] {
+[Pipeline] git
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/unir/Jenkinsfile_agentes/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/GiovannaLeon/todo-list-aws.git # timeout=10
+Fetching upstream changes from https://github.com/GiovannaLeon/todo-list-aws.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.34.1'
+ > git fetch --tags --force --progress -- https://github.com/GiovannaLeon/todo-list-aws.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+Checking out Revision 3b7d7bdd91a360c529f74fbbbd4aada326149dcc (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3b7d7bdd91a360c529f74fbbbd4aada326149dcc # timeout=10
+ > git branch -a -v --no-abbrev # timeout=10
+ > git branch -D master # timeout=10
+ > git checkout -b master 3b7d7bdd91a360c529f74fbbbd4aada326149dcc # timeout=10
+Commit message: "Merge branch 'master' of https://github.com/GiovannaLeon/todo-list-aws"
+ > git rev-list --no-walk 3b7d7bdd91a360c529f74fbbbd4aada326149dcc # timeout=10
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to Production)
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/unir/Jenkinsfile_agentes
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] catchError
+[Pipeline] {
+[Pipeline] sh
++ whoami
+jenkins
+[Pipeline] sh
++ hostname
+ip-172-31-17-127
+[Pipeline] sh
++ sam build
+Building codeuri: /var/lib/jenkins/workspace/unir/Jenkinsfile_agentes/src runtime: python3.10 metadata: {} architecture: x86_64 functions: CreateTodoFunction, ListTodosFunction, GetTodoFunction, UpdateTodoFunction, DeleteTodoFunction
+ Running PythonPipBuilder:ResolveDependencies
+ Running PythonPipBuilder:CopySource
+
+Build Succeeded
+
+Built Artifacts  : .aws-sam/build
+Built Template   : .aws-sam/build/template.yaml
+
+Commands you can use next
+=========================
+[*] Validate SAM template: sam validate
+[*] Invoke Function: sam local invoke
+[*] Test Function in the Cloud: sam sync --stack-name {{stack-name}} --watch
+[*] Deploy: sam deploy --guided
+[Pipeline] sh
++ sam validate --region us-east-1
+/var/lib/jenkins/workspace/unir/Jenkinsfile_agentes/template.yaml is a valid SAM Template. This is according to basic SAM Validation, for additional validation, please run with "--lint" option
+[Pipeline] sh
++ sam deploy --config-file samconfig.toml --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+File with same data already exists at todo-list-aws/1561100ba811fe2ecadaa8a2ae53e1a2, skipping upload
+
+	Deploying with following values
+	===============================
+	Stack name                   : todo-list-aws-production
+	Region                       : us-east-1
+	Confirm changeset            : False
+	Disable rollback             : False
+	Deployment s3 bucket         : todo-list-aws-production
+	Capabilities                 : ["CAPABILITY_IAM"]
+	Parameter overrides          : {"Stage": "production"}
+	Signing Profiles             : {}
+
+Initiating deployment
+=====================
+
+File with same data already exists at todo-list-aws/306a3c20dae03b45010c36b46e13d763.template, skipping upload
+
+
+Waiting for changeset to be created..
+
+No changes to deploy. Stack todo-list-aws-production is up to date
+[Pipeline] }
+[Pipeline] // catchError
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static Analysis)
+[Pipeline] node
+Running on static-analysis in /home/ubuntu/static-analysis/workspace/unir/Jenkinsfile_agentes
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+Ejecutando análisis estático con Flake8 y Bandit
+[Pipeline] sh
++ whoami
+ubuntu
+[Pipeline] sh
++ hostname
+ip-172-31-17-127
+[Pipeline] sh
++ pip install flake8 bandit
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: flake8 in /home/ubuntu/.local/lib/python3.10/site-packages (7.1.2)
+Requirement already satisfied: bandit in /home/ubuntu/.local/lib/python3.10/site-packages (1.8.2)
+Requirement already satisfied: mccabe<0.8.0,>=0.7.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from flake8) (0.7.0)
+Requirement already satisfied: pycodestyle<2.13.0,>=2.12.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from flake8) (2.12.1)
+Requirement already satisfied: pyflakes<3.3.0,>=3.2.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from flake8) (3.2.0)
+Requirement already satisfied: PyYAML>=5.3.1 in /usr/lib/python3/dist-packages (from bandit) (5.4.1)
+Requirement already satisfied: stevedore>=1.20.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from bandit) (5.4.0)
+Requirement already satisfied: rich in /home/ubuntu/.local/lib/python3.10/site-packages (from bandit) (13.9.4)
+Requirement already satisfied: pbr>=2.0.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from stevedore>=1.20.0->bandit) (6.1.1)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from rich->bandit) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from rich->bandit) (2.19.1)
+Requirement already satisfied: typing-extensions<5.0,>=4.0.0 in /home/ubuntu/.local/lib/python3.10/site-packages (from rich->bandit) (4.12.2)
+Requirement already satisfied: mdurl~=0.1 in /home/ubuntu/.local/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich->bandit) (0.1.2)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.10/dist-packages (from pbr>=2.0.0->stevedore>=1.20.0->bandit) (75.8.0)
+[Pipeline] sh
++ flake8 .
+[Pipeline] sh
++ bandit -r .
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.10.12
+Run started:2025-02-21 00:26:58.260757
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 0
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Rest Test)
+[Pipeline] node
+Running on api-tests in /home/ubuntu/api-tests/workspace/unir/Jenkinsfile_agentes
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] catchError
+[Pipeline] {
+[Pipeline] echo
+Ejecutando pruebas de solo lectura en producción
+[Pipeline] sh
++ whoami
+ubuntu
+[Pipeline] sh
++ hostname
+ip-172-31-17-127
+[Pipeline] }
+[Pipeline] // catchError
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Promote to Production)
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/unir/Jenkinsfile_agentes
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ git status
+On branch master
+nothing to commit, working tree clean
+[Pipeline] sh
++ git checkout master
+Already on 'master'
+[Pipeline] sh
++ git pull origin master
+From https://github.com/GiovannaLeon/todo-list-aws
+ * branch            master     -> FETCH_HEAD
+Already up to date.
+[Pipeline] withCredentials
+Masking supported pattern matches of $GIT_PASS
+[Pipeline] {
+[Pipeline] sh
++ git remote set-url origin https://GiovannaLeon:****@github.com/GiovannaLeon/todo-list-aws.git
++ git push origin master
+Everything up-to-date
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] End of Pipeline
+Finished: SUCCESS
