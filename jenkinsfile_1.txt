@@ -3,7 +3,6 @@ pipeline {
   
     environment {
          // Storing the secret token from Jenkins as an environment variable
-        MiToken = credentials('MITOKEN1')  // 'MiToken' is the ID of your secret text in Jenkins
         REGION = 'us-east-1'  // O la región que prefieras
         STACK_NAME = 'todo-list-aws-staging'  // Nombre del stack de CloudFormation
         S3_BUCKET = 'todo-list-aws-staging'  // Nombre del bucket S3
@@ -36,20 +35,30 @@ pipeline {
                         sh 'sam build'
                        
                         sh 'sam validate --region us-east-1'
-                        // Ejecutar el despliegue con SAM
-                        sh """
-                            sam deploy --config-file samconfig.toml --config-env staging sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
-                        """
-                    /*
-                    script{
-                                def apiUrl = sh(script: """
-                                    sam list stack-outputs --stack-name ${STACK_NAME} --region ${REGION} --OUTPUT JSON | -r '.[] | select(.Outputkey="BaseUrlApi") | outputvalue'
-                            """, returnStdout: true).trim()
-                            
-                            env.BASE_URL = apiUrl
-                            echo "API BASE_RUL: ${env.BASE_URL}"
+                        
+                         // Ejecutar el despliegue con SAM y forzar la carga de archivos
+                sh """
+                    sam deploy --config-file samconfig.toml --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset --force-upload
+                """
+                    
+                     script {
+                        sleep(10) // Espera 10 segundos antes de intentar de nuevo
+                        
+                    // Obtener la URL de la API usando AWS CLI (sin depender de jq)
+                    def apiUrl = sh(script: """
+                        aws cloudformation describe-stacks --stack-name ${STACK_NAME} --region ${REGION} --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" --output text
+                    """, returnStdout: true).trim()
+
+                    // Verificar si se obtuvo correctamente la URL
+                    if (apiUrl) {
+                        // Establecer la URL en una variable de entorno
+                        env.BASE_URL = apiUrl
+                        echo "API BASE_URL: ${env.BASE_URL}"
+                    } else {
+                        error "No se pudo obtener la URL de la API desde los outputs del stack."
                     }
-                    */
+                }
+                            
 
                     }
                 }
@@ -79,54 +88,42 @@ pipeline {
 
 
         
-         stage('Promote to Production') {
+        stage('Promote to Production') {
             steps {
                 script {
                     def mergeSuccessful = false
                     try {
-                        // Verifica el estado actual del repositorio
-                        
-                        
+
                         sh 'git status'
 
                         // Cambiar a la rama master
                          sh 'git checkout master'
                         
-                        // Configurar para usar la estrategia de merge (por defecto)
-                         sh 'git config pull.rebase false'
-
                         // Traer los últimos cambios de master para evitar conflictos
                          sh 'git pull origin master'
+                      
                         
-                        // Verificar si hay algún cambio no deseado
-                         sh 'git status'
+                        // Hacer push a la rama master después del rebase y commit
+                        withCredentials([usernamePassword(credentialsId: 'MITOKENFINAL', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                            sh '''
+                                git remote set-url origin https://$GIT_USER:$GIT_PASS@github.com/GiovannaLeon/todo-list-aws.git
+                                git push origin master
+                            '''
+                        }
 
-                        // Hacer merge de develop a master
-                        sh 'git merge develop'
-                        
-                        // Empujar los cambios a master
-                        //sh 'git push origin master'
-                        sh 'git remote set-url origin https://${MiToken}@github.com/GiovannaLeon/todo-list-aws.git'  
-                        sh 'gi push origin master'
-           
-
-                        // Si no hubo excepciones, marcar el merge como exitoso
                         mergeSuccessful = true
                     } catch (Exception e) {
-                        // Si ocurre un error, marcar como fallido
                         mergeSuccessful = false
-                        error "Merge failed: ${e.message}"
+                        error "Merge failed or push failed: ${e.message}"
                     }
 
-                    // Comprobar si el merge fue exitoso antes de continuar
                     if (!mergeSuccessful) {
-                        error "Merge to master failed. Aborting production deployment."
+                        error "Merge or push to master failed. Aborting production deployment."
                     }
                 }
             }
         }
     }
-
 }
 
 
