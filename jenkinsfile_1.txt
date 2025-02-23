@@ -35,20 +35,30 @@ pipeline {
                         sh 'sam build'
                        
                         sh 'sam validate --region us-east-1'
-                        // Ejecutar el despliegue con SAM
-                        sh """
-                            sam deploy --config-file samconfig.toml --config-env staging sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
-                        """
-                    /*
-                    script{
-                                def apiUrl = sh(script: """
-                                    sam list stack-outputs --stack-name ${STACK_NAME} --region ${REGION} --OUTPUT JSON | -r '.[] | select(.Outputkey="BaseUrlApi") | outputvalue'
-                            """, returnStdout: true).trim()
-                            
-                            env.BASE_URL = apiUrl
-                            echo "API BASE_RUL: ${env.BASE_URL}"
+                        
+                         // Ejecutar el despliegue con SAM y forzar la carga de archivos
+                sh """
+                    sam deploy --config-file samconfig.toml --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset --force-upload
+                """
+                    
+                     script {
+                        sleep(10) // Espera 10 segundos antes de intentar de nuevo
+                        
+                    // Obtener la URL de la API usando AWS CLI (sin depender de jq)
+                    def apiUrl = sh(script: """
+                        aws cloudformation describe-stacks --stack-name ${STACK_NAME} --region ${REGION} --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" --output text
+                    """, returnStdout: true).trim()
+
+                    // Verificar si se obtuvo correctamente la URL
+                    if (apiUrl) {
+                        // Establecer la URL en una variable de entorno
+                        env.BASE_URL = apiUrl
+                        echo "API BASE_URL: ${env.BASE_URL}"
+                    } else {
+                        error "No se pudo obtener la URL de la API desde los outputs del stack."
                     }
-                    */
+                }
+                            
 
                     }
                 }

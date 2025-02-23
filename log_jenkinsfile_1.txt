@@ -19,14 +19,14 @@ Fetching upstream changes from https://github.com/GiovannaLeon/todo-list-aws.git
  > git --version # 'git version 2.34.1'
  > git fetch --tags --force --progress -- https://github.com/GiovannaLeon/todo-list-aws.git +refs/heads/*:refs/remotes/origin/* # timeout=10
  > git rev-parse refs/remotes/origin/develop^{commit} # timeout=10
-Checking out Revision f2d88db370534063c043517967daaa19e3b8043d (refs/remotes/origin/develop)
+Checking out Revision 9af448dfbfc1538709f358437045adb071c9c120 (refs/remotes/origin/develop)
  > git config core.sparsecheckout # timeout=10
- > git checkout -f f2d88db370534063c043517967daaa19e3b8043d # timeout=10
+ > git checkout -f 9af448dfbfc1538709f358437045adb071c9c120 # timeout=10
  > git branch -a -v --no-abbrev # timeout=10
  > git branch -D develop # timeout=10
- > git checkout -b develop f2d88db370534063c043517967daaa19e3b8043d # timeout=10
-Commit message: "Add files via upload"
- > git rev-list --no-walk f2d88db370534063c043517967daaa19e3b8043d # timeout=10
+ > git checkout -b develop 9af448dfbfc1538709f358437045adb071c9c120 # timeout=10
+Commit message: "Update samconfig.toml"
+ > git rev-list --no-walk 9af448dfbfc1538709f358437045adb071c9c120 # timeout=10
 [Pipeline] }
 [Pipeline] // stage
 [Pipeline] stage
@@ -70,12 +70,27 @@ Commands you can use next
 + sam validate --region us-east-1
 /var/lib/jenkins/workspace/unir/cp41/template.yaml is a valid SAM Template. This is according to basic SAM Validation, for additional validation, please run with "--lint" option
 [Pipeline] sh
-+ sam deploy --config-file samconfig.toml --config-env staging sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
-File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4, skipping upload
-File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4, skipping upload
-File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4, skipping upload
-File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4, skipping upload
-File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4, skipping upload
++ sam deploy --config-file samconfig.toml --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset --force-upload
+
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  262144 / 579052  (45.27%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  524288 / 579052  (90.54%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  579052 / 579052  (100.00%)
+
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  262144 / 579052  (45.27%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  524288 / 579052  (90.54%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  579052 / 579052  (100.00%)
+
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  262144 / 579052  (45.27%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  524288 / 579052  (90.54%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  579052 / 579052  (100.00%)
+
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  262144 / 579052  (45.27%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  524288 / 579052  (90.54%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  579052 / 579052  (100.00%)
+
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  262144 / 579052  (45.27%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  524288 / 579052  (90.54%)
+	Uploading to todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc4ad4  579052 / 579052  (100.00%)
 
 	Deploying with following values
 	===============================
@@ -91,12 +106,93 @@ File with same data already exists at todo-list-aws/cdfff85a83ffcd670b21b4c9a1dc
 Initiating deployment
 =====================
 
-File with same data already exists at todo-list-aws/f7ad9ec47ee0781afde61a1faea1ab8b.template, skipping upload
+
+	Uploading to todo-list-aws/f7ad9ec47ee0781afde61a1faea1ab8b.template  4445 / 4445  (100.00%)
 
 
 Waiting for changeset to be created..
 
-No changes to deploy. Stack todo-list-aws-staging is up to date
+CloudFormation stack changeset
+-------------------------------------------------------------------------------------------------
+Operation                LogicalResourceId        ResourceType             Replacement            
+-------------------------------------------------------------------------------------------------
+* Modify                 CreateTodoFunction       AWS::Lambda::Function    False                  
+* Modify                 DeleteTodoFunction       AWS::Lambda::Function    False                  
+* Modify                 GetTodoFunction          AWS::Lambda::Function    False                  
+* Modify                 ListTodosFunction        AWS::Lambda::Function    False                  
+* Modify                 ServerlessRestApi        AWS::ApiGateway::RestA   False                  
+                                                  pi                                              
+* Modify                 UpdateTodoFunction       AWS::Lambda::Function    False                  
+-------------------------------------------------------------------------------------------------
+
+
+Changeset created successfully. arn:aws:cloudformation:us-east-1:582789485636:changeSet/samcli-deploy1740312698/6db2d414-69f1-4e02-b0c2-f6b7a6283572
+
+
+2025-02-23 12:11:49 - Waiting for stack create/update to complete
+
+CloudFormation events from stack operations (refresh every 5.0 seconds)
+-------------------------------------------------------------------------------------------------
+ResourceStatus           ResourceType             LogicalResourceId        ResourceStatusReason   
+-------------------------------------------------------------------------------------------------
+UPDATE_IN_PROGRESS       AWS::CloudFormation::S   todo-list-aws-staging    User Initiated         
+                         tack                                                                     
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    ListTodosFunction        -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    DeleteTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    UpdateTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    CreateTodoFunction       -                      
+UPDATE_IN_PROGRESS       AWS::Lambda::Function    GetTodoFunction          -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    ListTodosFunction        -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    GetTodoFunction          -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    UpdateTodoFunction       -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    DeleteTodoFunction       -                      
+UPDATE_COMPLETE          AWS::Lambda::Function    CreateTodoFunction       -                      
+UPDATE_COMPLETE_CLEANU   AWS::CloudFormation::S   todo-list-aws-staging    -                      
+P_IN_PROGRESS            tack                                                                     
+UPDATE_COMPLETE          AWS::CloudFormation::S   todo-list-aws-staging    -                      
+                         tack                                                                     
+-------------------------------------------------------------------------------------------------
+
+CloudFormation outputs from deployed stack
+-------------------------------------------------------------------------------------------------
+Outputs                                                                                         
+-------------------------------------------------------------------------------------------------
+Key                 BaseUrlApi                                                                  
+Description         Base URL of API                                                             
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod                 
+
+Key                 DeleteTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Delete TODO             
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 ListTodosApi                                                                
+Description         API Gateway endpoint URL for ${opt:stage} stage for List TODO               
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod/todos           
+
+Key                 UpdateTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Update TODO             
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 GetTodoApi                                                                  
+Description         API Gateway endpoint URL for ${opt:stage} stage for Get TODO                
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod/todos/{id}      
+
+Key                 CreateTodoApi                                                               
+Description         API Gateway endpoint URL for ${opt:stage} stage for Create TODO             
+Value               https://wyqnoxpnu2.execute-api.us-east-1.amazonaws.com/Prod/todos/          
+-------------------------------------------------------------------------------------------------
+
+
+Successfully created/updated stack - todo-list-aws-staging in us-east-1
+
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ aws cloudformation describe-stacks --stack-name todo-list-aws-staging --region us-east-1 --query Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue --output text
+[Pipeline] echo
+API BASE_URL: null
+[Pipeline] }
+[Pipeline] // script
 [Pipeline] }
 [Pipeline] // catchError
 [Pipeline] }
@@ -142,40 +238,19 @@ nothing added to commit but untracked files present (use "git add" to track)
 [Pipeline] sh
 + git checkout master
 Switched to branch 'master'
-Your branch and 'origin/master' have diverged,
-and have 2 and 8 different commits each, respectively.
-  (use "git pull" to merge the remote branch into yours)
+Your branch is up to date with 'origin/master'.
 [Pipeline] sh
 + git pull origin master
 From https://github.com/GiovannaLeon/todo-list-aws
  * branch            master     -> FETCH_HEAD
-Auto-merging samconfig.toml
-Merge made by the 'ort' strategy.
- agent.jar                | Bin 0 -> 1395562 bytes
- jenkinsfile5_develop.txt |  26 +++++++++
- jenkinsfile5_mater.txt   |  23 ++++++++
- jenkinsfile_1.txt        | 132 ++++++++++++++++++++++++++++++++++++++++++
- jenkinsfile_2.txt        | 120 ++++++++++++++++++++++++++++++++++++++
- jenkinsfile_4.txt        |  69 ++++++++++++++++++++++
- jenkinsfile_agentes.txt  | 147 +++++++++++++++++++++++++++++++++++++++++++++++
- samconfig.toml           |   2 +-
- src/todoList.py          |   2 +-
- 9 files changed, 519 insertions(+), 2 deletions(-)
- create mode 100644 agent.jar
- create mode 100644 jenkinsfile5_develop.txt
- create mode 100644 jenkinsfile5_mater.txt
- create mode 100644 jenkinsfile_1.txt
- create mode 100644 jenkinsfile_2.txt
- create mode 100644 jenkinsfile_4.txt
- create mode 100644 jenkinsfile_agentes.txt
+Already up to date.
 [Pipeline] withCredentials
 Masking supported pattern matches of $GIT_PASS
 [Pipeline] {
 [Pipeline] sh
 + git remote set-url origin https://GiovannaLeon:****@github.com/GiovannaLeon/todo-list-aws.git
 + git push origin master
-To https://github.com/GiovannaLeon/todo-list-aws.git
-   08cfa89..3b7d7bd  master -> master
+Everything up-to-date
 [Pipeline] }
 [Pipeline] // withCredentials
 [Pipeline] }
