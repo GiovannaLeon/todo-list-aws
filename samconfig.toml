@@ -22,6 +22,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Stage=\"staging\""
 image_repositories = []
 
+
 [production]
 [production.deploy]
 [production.deploy.parameters]
